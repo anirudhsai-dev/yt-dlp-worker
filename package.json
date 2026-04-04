@@ -1,0 +1,8 @@
+{
+  "name": "yt-dlp-worker",
+  "version": "1.0.0",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js"
+  }
+}
