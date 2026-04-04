@@ -1,0 +1,34 @@
+name: Download YouTube Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "YouTube URL"
+        required: true
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install yt-dlp
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod +x /usr/local/bin/yt-dlp
+
+      - name: Download video
+        run: |
+          mkdir downloads
+          yt-dlp -f best -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.url }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: video
+          path: downloads/
