@@ -17,22 +17,28 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y ffmpeg curl
-          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-          sudo chmod +x /usr/local/bin/yt-dlp
-
-      - name: Install Node (fix JS warning)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+          sudo apt install -y ffmpeg curl python3 python3-pip
+          sudo pip install -U yt-dlp
 
       - name: Save cookies
         run: echo "${{ secrets.YT_COOKIES }}" > cookies.txt
 
+      - name: Normalize URL
+        run: |
+          URL="${{ github.event.inputs.url }}"
+          NORMALIZED=$(echo "$URL" | sed 's/shorts\//watch?v=/')
+          echo "VIDEO_URL=$NORMALIZED" >> $GITHUB_ENV
+
       - name: Download video
         run: |
           mkdir downloads
-          yt-dlp --cookies cookies.txt -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.url }}"
+          yt-dlp \
+            --cookies cookies.txt \
+            --extractor-args "youtube:player_client=android" \
+            --force-ipv4 \
+            -f "bv*+ba/b/best" \
+            -o "downloads/%(title)s.%(ext)s" \
+            "$VIDEO_URL"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
